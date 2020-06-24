@@ -27,4 +27,4 @@ FROM
   \`$PROJECT.$DATASET.gcp_billing_export_*\`;
 EOF
 
-bq mk --project $PROJECT --view="${Q}" $DATASET.gcp_billing
+bq mk --project_id $PROJECT --view="${Q}" $DATASET.gcp_billing
