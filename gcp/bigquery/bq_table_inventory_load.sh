@@ -12,4 +12,4 @@ bq load \
  --source_format=NEWLINE_DELIMITED_JSON \
  $1 \
  $2 \
- projectId:STRING,datasetId:STRING,tableId:STRING,creationTime:TIMESTAMP,lastModifiedTime:TIMESTAMP,rowCount:INTEGER,columnCount:INTEGER,sizeBytes:INTEGER,timePartitioningField:STRING,timePartitioningType:STRING,rangePartitioningField:STRING,require_partition_filter:STRING,clusterColumns:STRING,tableLastAccess:TIMESTAMP,dataLocation:STRING,inventoriedTime:TIMESTAMP,tableDescription:STRING,tableExpires:TIMESTAMP,partitionsExpire:TIMESTAMP,tableLink:STRING
+ projectId:STRING,datasetId:STRING,tableId:STRING,creationTime:TIMESTAMP,lastModifiedTime:TIMESTAMP,rowCount:INTEGER,columnCount:INTEGER,sizeBytes:INTEGER,timePartitioningField:STRING,timePartitioningType:STRING,rangePartitioningField:STRING,require_partition_filter:STRING,clusterColumns:STRING,tableLastAccess:TIMESTAMP,dataLocation:STRING,inventoriedTime:TIMESTAMP,tableDescription:STRING,tableExpires:TIMESTAMP,partitionsExpire:TIMESTAMP,tableLink:STRING,,partitionCount:INTEGER

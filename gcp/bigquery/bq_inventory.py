@@ -279,9 +279,10 @@ def inventory_dataset_views(projectID, datasetID):
 
     return
 
-# Get List of GCP Projects to inventory
-projectIDs = get_gcp_projects() 
+if __name__ == '__main__':
+    # Get List of GCP Projects to inventory
+    projectIDs = get_gcp_projects() 
 
-# Enumerate projects, pull dataset and table metadata
-for project in projectIDs:
-    inventory_project_tables(project)
+    # Enumerate projects, pull dataset and table metadata
+    for project in projectIDs:
+        inventory_project_tables(project)
