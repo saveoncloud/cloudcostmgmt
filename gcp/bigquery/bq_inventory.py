@@ -111,6 +111,28 @@ def get_table_access_log():
 
     return tableLastAccess
 
+def get_dataset_access_log():
+    # Pull Last Query Time for all BQ Datasets from BQ Query Audit dataset
+    if debugOutput: print("Retrieving Dataset Last Access")
+    datasetAccessQuery = f"""
+        SELECT tables.projectId as p, tables.datasetId as d, max(startTime) as st
+        FROM `{bqQueryAuditTable}`
+        GROUP BY p,d
+        ORDER BY st DESC
+    """
+    if 'client' in globals():
+        global client
+    else:
+        client = bigquery.Client()
+
+    datasetAccessQueryJob = client.query(datasetAccessQuery) 
+    datasetLastAccess = {} 
+
+    for row in datasetAccessQueryJob:
+        datasetLastAccess[f"{row['p']}:{row['d']}"] = row['st']
+
+    return datasetLastAccess
+
 def get_gcp_projects():
     # Pull list of all projects we have access to
     if debugOutput: print("Retrieving GCP Projects")
@@ -237,6 +259,50 @@ def inventory_table(projectID, datasetID, tableID):
     return
 
 def inventory_dataset(projectID, datasetID):
+    # Pull metadata for a specified Table, and return inventory record for it.
+    if debugOutput: print(f"Getting dataset metadata for project:dataset: {projectID}:{datasetID}")
+    if 'client' in globals():
+        global client
+    else:
+        client = bigquery.Client()
+
+    if 'datasetLastAccess' in globals():
+        global datasetLastAccess
+    else:
+        global datasetLastAccess
+        datasetLastAccess = get_dataset_access_log() 
+
+    dataset_ref = bigquery.DatasetReference(projectID, datasetID)
+    dataset = client.get_dataset(dataset_ref)  # API request
+
+    datasetPair = f"{projectID}:{datasetID}"
+
+    owner = []
+    for ace in dataset.access_entries:
+        if ace.entity_type == 'userByEmail' and ace.role == 'OWNER':
+            owner.append(ace.entity_id)
+    owner.sort()
+
+    datasetInventoryEntry = {
+        'projectId':projectID,
+        'datasetId':dataset.dataset_id,
+        'creationTime':dataset.created,
+        'lastModifiedTime':dataset.modified,
+        'datasetLastAccess':datasetLastAccess[datasetPair] if (datasetPair in datasetLastAccess) else None,
+        'dataLocation':dataset.location,
+        'inventoriedTime':datetime.datetime.now(),
+        'datasetDescription':dataset.description,
+        'datasetDefaultTableExpiration':dataset.default_table_expiration_ms,
+        'datasetDefaultPartitionExpiration':dataset.default_partition_expiration_ms,
+        'owner':",".join(owner),
+        'costCenter':dataset.labels['cost-center'] if 'cost-center' in dataset.labels else None,
+        'datasetLink':f'https://console.cloud.google.com/bigquery?project={projectID}&p={projectID}&d={datasetID}&page=dataset'
+    }
+
+    # Remove "None" values
+    datasetInventoryEntry = dict(filter(lambda item: item[1] is not None, datasetInventoryEntry.items()))
+    print(dataset.labels)
+    print(json.dumps(datasetInventoryEntry,cls=DateTimeEncoder))
     return
 
 def inventory_view(projectID, datasetID, viewID):
@@ -285,4 +351,5 @@ if __name__ == '__main__':
 
     # Enumerate projects, pull dataset and table metadata
     for project in projectIDs:
-        inventory_project_tables(project)
+        #inventory_project_tables(project)
+        inventory_project_datasets(project)
